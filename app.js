@@ -1,20 +1,11 @@
 (function () {
     'use strict';
-    
-    var canvas = document.getElementById("canv");
-    var ctx = canvas.getContext("2d");
 
     var control = document.getElementById("control");
     var start = document.createElement("button");
-    start.className = "control-button";
-    start.innerHTML = "Start";
     var pause = document.createElement("button");
-    pause.className = "control-button";
-    pause.innerHTML = "Pause";
-
-    document.getElementById('control').appendChild(start);
-
-    start.addEventListener("click", animateWorld);
+    var canvas = document.getElementById("canv");
+    var ctx = canvas.getContext("2d");
 
     const step = 30;
 
@@ -29,16 +20,6 @@
     }
 
     var directions = ['n', 'w', 'e', 's'];
-
-    function changeDirection(object, direction) {
-        switch (direction) {
-            case 'n': object.y -= step; break;
-            case 'w': object.x -= step; break;
-            case 'e': object.x += step; break;
-            case 's': object.y += step; break;
-        }
-        return object;
-    }
 
     (function buildGrid() {
         for (var i = 0; i < 20; i++) {
@@ -64,6 +45,16 @@
             stones.push(new GameObject(randomPoint(), randomPoint(), step, step, '#eee'));
         }
     })();
+
+    function changeDirection(object, direction) {
+        switch (direction) {
+            case 'n': object.y -= step; break;
+            case 'w': object.x -= step; break;
+            case 'e': object.x += step; break;
+            case 's': object.y += step; break;
+        }
+        return object;
+    }
 
     var employedFields = walls.slice();
     stones.forEach(function (item) { employedFields.push(item); });
@@ -128,6 +119,17 @@
         });
     };
 
+    PlantEater.prototype.reproduce = function() {
+        var thisEater = this;
+        var otherEaters = plantEaters.slice();
+        otherEaters.splice(plantEaters.indexOf(thisEater), 1);
+        otherEaters.forEach(function (item) {
+            if (item.x === thisEater.x && item.y === thisEater.y &&
+                item.lifeTime === 30 && thisEater.lifeTime === 30)
+                plantEaters.push(new PlantEater(thisEater.x, thisEater.y, step, step, '#55a3f1', 35, 's'));
+        });
+    };
+
     function createPlant() {
         plants.push(new Plant(randomPoint(), randomPoint(), step, step, '#37fa19', 0, 's', false));
     }
@@ -141,33 +143,11 @@
         createPlantEater();
     }
 
-    function draw() {
-        walls.forEach(function (item) {
-            ctx.fillStyle = item.color;
-            ctx.fillRect(item.x, item.y, item.w, item.h);
-        });
-        stones.forEach(function (item) {
-            ctx.fillStyle = item.color;
-            ctx.fillRect(item.x, item.y, item.w, item.h);
-        });
-        plants.forEach(function (item) {
-            ctx.fillStyle = item.color;
-            ctx.fillRect(item.x, item.y, item.w, item.h);
-        });
-        plantEaters.forEach(function (item) {
-            ctx.fillStyle = item.color;
-            ctx.fillRect(item.x, item.y, item.w, item.h);
-        });
-    }
-
-    function erase(value) {
-        ctx.clearRect(value.x, value.y, value.w, value.h);
-    }
-
     function plantsCycle() {
         plants.forEach(function (item) {
             item.lifeTime += 1;
             if (item.lifeTime % 25 === 0) item.grow();
+            draw(item);
         });
     }
 
@@ -177,6 +157,8 @@
                 erase(item);
                 item.move();
                 item.eat();
+                item.reproduce();
+                draw(item);
             } else {
                 erase(item);
                 plantEaters.splice(index, 1);
@@ -184,20 +166,43 @@
         });
     }
 
-    function World() {
-        plantEatersCycle();
-        plantsCycle();
-        draw();
+    var scene = walls.slice();
+    stones.forEach(function (item) { scene.push(item) });
+
+    function draw(drawObj) {
+        ctx.fillStyle = drawObj.color;
+        ctx.fillRect(drawObj.x, drawObj.y, drawObj.w, drawObj.h);
     }
 
+    function erase(eraseObj) {
+        ctx.clearRect(eraseObj.x, eraseObj.y, eraseObj.w, eraseObj.h);
+    }
+
+    function World() {
+        scene.forEach(function (item) { draw(item); });
+        plantEatersCycle();
+        plantsCycle();
+    }
+
+    start.className = "control-button";
+    start.innerHTML = "<span class='fa fa-play'></span>";
+    pause.className = "control-button";
+    pause.innerHTML = "<span class='fa fa-pause'></span>";
+
+    function addControlElem(value, func) {
+        control.appendChild(value);
+        value.addEventListener('click', func);
+    }
+
+    addControlElem(start, animateWorld);
+
     function animateWorld() {
-        control.removeChild(start);
-        document.getElementById('control').appendChild(pause);
         var timer = setTimeout(function tick() {
             World();
             timer = setTimeout(tick, 300);
         });
-        pause.addEventListener("click", function () {
+        control.removeChild(start);
+        addControlElem(pause, function () {
             clearTimeout(timer);
             control.removeChild(pause);
             document.getElementById('control').appendChild(start);

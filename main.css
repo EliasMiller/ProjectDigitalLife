@@ -1,9 +1,27 @@
+@font-face{
+    font-family:'FontAwesome';
+    src: url('fonts/fontawesome-webfont.ttf') format('truetype');
+}
+
 .control-button {
+    margin: 5% 47% 3% 47%;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
     font-size: 2em;
+    border: none;
+    background-color: lightslategray;
+    color: #fff;
+    outline: none;
+}
+
+.control-button:hover {
+    cursor: pointer;
+    background-color: cadetblue;
 }
 
 canvas {
     text-align: center;
     background-color: #333;
-    margin: 4% 10%;
+    margin: 0 27%;
 }
