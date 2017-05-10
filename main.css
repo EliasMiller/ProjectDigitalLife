@@ -1,3 +1,7 @@
+.control-button {
+    font-size: 2em;
+}
+
 canvas {
     text-align: center;
     background-color: #333;

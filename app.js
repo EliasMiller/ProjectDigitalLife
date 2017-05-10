@@ -1,11 +1,20 @@
-/**
- * Created by Eli on 24.04.2017
- */
-
 (function () {
     'use strict';
-    var canvas = document.getElementById("canvas");
+    
+    var canvas = document.getElementById("canv");
     var ctx = canvas.getContext("2d");
+
+    var control = document.getElementById("control");
+    var start = document.createElement("button");
+    start.className = "control-button";
+    start.innerHTML = "Start";
+    var pause = document.createElement("button");
+    pause.className = "control-button";
+    pause.innerHTML = "Pause";
+
+    document.getElementById('control').appendChild(start);
+
+    start.addEventListener("click", animateWorld);
 
     const step = 30;
 
@@ -77,19 +86,6 @@
         return object;
     }
 
-    function canEat(object) {
-        plants.forEach(function (item) {
-            if (item.x === object.x && item.y === object.y) {
-                object.canEat = true;
-                item.eaten = true;
-            } else {
-                object.canEat = false;
-                item.eaten = false;
-            }
-        });
-        return object;
-    }
-
     function GameObject(x, y, h, w, color) {
         this.x = x;
         this.y = y;
@@ -98,11 +94,10 @@
         this.color = color;
     }
 
-    function Plant(x, y, h, w, color, lifeTime, direction, eaten) {
+    function Plant(x, y, h, w, color, lifeTime, direction) {
         GameObject.apply(this, arguments);
         this.lifeTime = lifeTime;
         this.direction = direction;
-        this.eaten = eaten;
     }
 
     Plant.prototype.grow = function() {
@@ -111,11 +106,10 @@
         changeDirection(this, this.direction);
     };
 
-    function PlantEater(x, y, h, w, color, lifeTime, direction, canEat) {
+    function PlantEater(x, y, h, w, color, lifeTime, direction) {
         GameObject.apply(this, arguments);
         this.lifeTime = lifeTime;
         this.direction = direction;
-        this.canEat = canEat;
     }
 
     PlantEater.prototype.move = function() {
@@ -125,8 +119,13 @@
     };
 
     PlantEater.prototype.eat = function() {
-        canEat(this);
-        if (this.canEat === true) this.lifeTime += 1;
+        var thisEater = this;
+        plants.forEach(function (item, index) {
+            if (item.x === thisEater.x && item.y === thisEater.y) {
+                thisEater.lifeTime += 1;
+                plants.splice(index, 1);
+            }
+        });
     };
 
     function createPlant() {
@@ -166,13 +165,9 @@
     }
 
     function plantsCycle() {
-        plants.forEach(function (item, index) {
+        plants.forEach(function (item) {
             item.lifeTime += 1;
-            if (item.lifeTime === 25) item.grow();
-            if (item.eaten === true) {
-                erase(item);
-                plants.splice(index, 1);
-            }
+            if (item.lifeTime % 25 === 0) item.grow();
         });
     }
 
@@ -195,11 +190,18 @@
         draw();
     }
 
-    (function animateWorld() {
-        var timerId = setTimeout(function tick() {
+    function animateWorld() {
+        control.removeChild(start);
+        document.getElementById('control').appendChild(pause);
+        var timer = setTimeout(function tick() {
             World();
-            timerId = setTimeout(tick, 300);
+            timer = setTimeout(tick, 300);
         });
-    })();
+        pause.addEventListener("click", function () {
+            clearTimeout(timer);
+            control.removeChild(pause);
+            document.getElementById('control').appendChild(start);
+        });
+    }
 
 })();
